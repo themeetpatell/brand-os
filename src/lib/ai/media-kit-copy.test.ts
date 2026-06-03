@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MediaKitCopySchema } from './media-kit-copy'
+import { MediaKitCopySchema, buildFallbackMediaKitCopy } from './media-kit-copy'
 
 describe('MediaKitCopySchema', () => {
   it('validates a well-formed copy object', () => {
@@ -23,5 +23,25 @@ describe('MediaKitCopySchema', () => {
         highlights: ['x'],
       }),
     ).toThrow()
+  })
+})
+
+describe('buildFallbackMediaKitCopy', () => {
+  it('produces schema-valid, stats-grounded copy', () => {
+    const copy = buildFallbackMediaKitCopy({
+      handle: 'aanya.styles',
+      displayName: 'Aanya',
+      email: 'aanya@example.com',
+      niche: 'fashion',
+      region: 'IN',
+      followerCount: 50000,
+      avgLikes: 1400,
+      avgComments: 100,
+      engagementRate: 3.0,
+      tier: 'micro',
+    })
+    expect(() => MediaKitCopySchema.parse(copy)).not.toThrow()
+    expect(copy.bio).toContain('50,000')
+    expect(copy.brandFitCategories).toContain('fashion')
   })
 })
