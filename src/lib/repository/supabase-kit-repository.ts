@@ -27,9 +27,14 @@ export class SupabaseKitRepository implements KitRepository {
   }
 
   async getKitBySlug(slug: string): Promise<KitRecord | null> {
+    // `email` is intentionally excluded: it is PII captured at creation but never
+    // shown publicly, and the publishable-key role has no SELECT grant on it
+    // (see supabase/migrations/0002_media_kits_rls.sql). Requesting it would fail.
     const { data, error } = await this.client
       .from('media_kits')
-      .select('*')
+      .select(
+        'slug, handle, display_name, niche, region, follower_count, avg_likes, avg_comments, engagement_rate, tier, rate_card, copy',
+      )
       .eq('slug', slug)
       .maybeSingle()
     if (error) throw new Error(`getKitBySlug failed: ${error.message}`)
@@ -38,7 +43,7 @@ export class SupabaseKitRepository implements KitRepository {
     const stats: CreatorStats = {
       handle: data.handle,
       displayName: data.display_name,
-      email: data.email,
+      email: '',
       niche: data.niche as Niche,
       region: data.region as Region,
       followerCount: data.follower_count,
