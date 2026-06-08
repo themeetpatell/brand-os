@@ -26,6 +26,8 @@ export async function acceptApplication(
 
   const brief = await deps.briefRepo.getBriefById(app.briefId)
   if (!brief || brief.brandId !== brandId) throw new Error('not your brief')
+  // Only one applicant can be accepted per brief — refuse once it's filled/closed.
+  if (brief.status !== 'open') throw new Error('brief is no longer open')
 
   const idGen = deps.idGen ?? (() => nanoid())
   const now = deps.now ?? (() => new Date().toISOString())

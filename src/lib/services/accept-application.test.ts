@@ -47,4 +47,13 @@ describe('acceptApplication', () => {
     const d = setup()
     await expect(acceptApplication('brand_1', 'missing', 'X', d)).rejects.toThrow()
   })
+  it('refuses a second accept once the brief is filled', async () => {
+    const d = setup()
+    await acceptApplication('brand_1', 'app_1', 'Sugar Cosmetics', d)
+    await d.appRepo.saveApplication({
+      id: 'app_2', briefId: 'brief_1', creatorId: 'creator_2', quoteAmount: 9000,
+      currency: 'INR', message: 'me too', status: 'applied', createdAt: 't',
+    })
+    await expect(acceptApplication('brand_1', 'app_2', 'Sugar Cosmetics', d)).rejects.toThrow()
+  })
 })
