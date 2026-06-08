@@ -1,14 +1,17 @@
 import { createServiceClient } from '../supabase/server-client'
 import { SupabaseDealRepository } from '../repository/supabase-deal-repository'
+import { SupabaseBriefRepository } from '../repository/supabase-brief-repository'
 import { SupabaseEventSink } from '../events/supabase-event-sink'
 import { FakePaymentsProvider } from '../payments/fake-payments-provider'
 import { CashfreePaymentsProvider } from '../payments/cashfree-provider'
 import type { DealRepository } from '../repository/deal-repository'
+import type { BriefRepository } from '../repository/brief-repository'
 import type { EventSink } from '../events/event-sink'
 import type { PaymentsProvider } from '../payments/provider'
 
 export interface ServerDeps {
   dealRepo: DealRepository
+  briefRepo: BriefRepository
   events: EventSink
   payments: PaymentsProvider
 }
@@ -32,6 +35,7 @@ export function getServerDeps(): ServerDeps {
   const client = createServiceClient()
   return {
     dealRepo: new SupabaseDealRepository(client),
+    briefRepo: new SupabaseBriefRepository(client),
     events: new SupabaseEventSink(client),
     payments: getPaymentsProvider(),
   }

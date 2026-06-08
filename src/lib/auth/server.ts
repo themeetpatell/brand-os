@@ -11,3 +11,8 @@ export async function getCreatorIdFromRequest(request: Request): Promise<string 
   if (error || !data.user) return null
   return data.user.id
 }
+
+// Same Bearer-token validation, named for any authenticated actor (creator or brand).
+export async function getUserIdFromRequest(request: Request): Promise<string | null> {
+  return getCreatorIdFromRequest(request)
+}
