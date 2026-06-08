@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────────────────────
+   Roster — "Editorial Atelier"
+   Warm ivory paper · espresso ink · a single marigold signature.
+   Fashion-magazine meets refined fintech.
+   ────────────────────────────────────────────────────────────── */
+
+@theme {
+  --color-paper: #f4eddf;
+  --color-paper-2: #ece1cb;
+  --color-card: #fbf7ee;
+  --color-ink: #1d1813;
+  --color-ink-soft: #6c6253;
+  --color-ink-faint: #978d7c;
+  --color-line: #ddd0b6;
+  --color-line-strong: #c8b896;
+  --color-marigold: #e0902c;
+  --color-marigold-deep: #a4611a;
+  --color-clay: #bb4f36;
+  --color-positive: #4e6b4d;
+
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  --shadow-soft: 0 1px 2px rgba(29, 24, 19, 0.05), 0 10px 30px -18px rgba(29, 24, 19, 0.3);
+  --shadow-lift: 0 2px 4px rgba(29, 24, 19, 0.06), 0 26px 50px -24px rgba(29, 24, 19, 0.4);
+
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Paper grain — atmosphere, not noise. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--color-marigold);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-marigold-deep);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* Display headings: optical sizing + tighter editorial tracking. */
+.font-display {
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+}
+
+/* Tabular figures — money should read like a ledger. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Eyebrow / kicker label. */
+.kicker {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-marigold-deep);
+}
+
+/* Hairline rule with a warm fade. */
+.rule {
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-line-strong), transparent);
+}
+
+/* Orchestrated load reveal. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal {
+  opacity: 0;
+  animation: reveal 0.85s var(--ease-soft) both;
+}
+
+@keyframes float-card {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--rot, 0deg)); }
+}
+
+.float-card {
+  animation: float-card 7s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .float-card {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
