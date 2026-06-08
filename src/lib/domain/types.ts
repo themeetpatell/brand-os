@@ -73,3 +73,19 @@ export const BriefInputSchema = z
     path: ['budgetMax'],
   })
 export type BriefInput = z.infer<typeof BriefInputSchema>
+
+export const APPLICATION_STATUSES = ['applied', 'accepted', 'declined', 'withdrawn'] as const
+export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number]
+
+export const ApplicationInputSchema = z.object({
+  quoteAmount: z.number().positive(),
+  message: z.string().min(1).max(600),
+})
+export type ApplicationInput = z.infer<typeof ApplicationInputSchema>
+
+export const CreatorProfileSchema = z.object({
+  niche: z.enum(NICHES),
+  region: z.enum(REGIONS),
+  rateFloor: z.number().positive(),
+})
+export type CreatorProfile = z.infer<typeof CreatorProfileSchema>
