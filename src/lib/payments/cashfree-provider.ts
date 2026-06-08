@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 import { computePayoutBreakdown } from './fees'
 import type {
   PaymentsProvider,
@@ -76,7 +76,12 @@ export class CashfreePaymentsProvider implements PaymentsProvider {
   verifyWebhook(rawBody: string, headers: WebhookHeaders): PaymentWebhookEvent | null {
     const signature = headers['x-webhook-signature']
     const timestamp = headers['x-webhook-timestamp']
-    if (!signature || !timestamp) {
+    if (!signature || !timestamp || !/^\d+$/.test(timestamp)) {
+      return null
+    }
+    // Reject stale signatures to blunt replay (the handler is also idempotent).
+    const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp))
+    if (ageSeconds > WEBHOOK_TOLERANCE_SECONDS) {
       return null
     }
     const expected = createHmac('sha256', this.config.secretKey)
@@ -93,7 +98,8 @@ export class CashfreePaymentsProvider implements PaymentsProvider {
       }
       const dealId = event.data?.order?.order_id
       if (!dealId) return null
-      const status = event.type === 'PAYMENT_SUCCESS_WEBHOOK' ? 'paid' : 'failed'
+      const status = mapEventType(event.type)
+      if (!status) return null
       return { dealId, status, providerRef: dealId }
     } catch {
       return null
@@ -101,9 +107,25 @@ export class CashfreePaymentsProvider implements PaymentsProvider {
   }
 }
 
+const WEBHOOK_TOLERANCE_SECONDS = 300
+
+const FAILED_EVENT_TYPES = new Set([
+  'PAYMENT_FAILED_WEBHOOK',
+  'PAYMENT_USER_DROPPED_WEBHOOK',
+])
+
+// Only act on known success/failure events; ignore everything else (refunds,
+// settlements, pending) rather than mislabeling it.
+function mapEventType(type: string | undefined): 'paid' | 'failed' | null {
+  if (type === 'PAYMENT_SUCCESS_WEBHOOK') return 'paid'
+  if (type && FAILED_EVENT_TYPES.has(type)) return 'failed'
+  return null
+}
+
+// Constant-time compare independent of input length (hash both sides first so a
+// length difference cannot leak via early exit).
 function safeEqual(a: string, b: string): boolean {
-  const bufA = Buffer.from(a)
-  const bufB = Buffer.from(b)
-  if (bufA.length !== bufB.length) return false
-  return timingSafeEqual(bufA, bufB)
+  const hashA = createHash('sha256').update(a).digest()
+  const hashB = createHash('sha256').update(b).digest()
+  return timingSafeEqual(hashA, hashB)
 }

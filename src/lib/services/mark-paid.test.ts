@@ -51,4 +51,16 @@ describe('markDealPaid', () => {
     const repo = new InMemoryDealRepository()
     await expect(markDealPaid('missing', { repo })).rejects.toThrow()
   })
+
+  it('is idempotent: a replayed settle does not re-emit an event', async () => {
+    const repo = new InMemoryDealRepository()
+    const events = new InMemoryEventSink()
+    const logged = await logDeal('creator_1', validBody, { repo, idGen: () => 'deal_abc', now: () => 't0' })
+
+    await markDealPaid(logged.id, { repo, events, now: () => 't1' })
+    const again = await markDealPaid(logged.id, { repo, events, now: () => 't2' })
+
+    expect(again.paidAt).toBe('t1') // unchanged by the replay
+    expect(events.all().filter((e) => e.type === 'deal_paid')).toHaveLength(1)
+  })
 })

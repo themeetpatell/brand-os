@@ -3,7 +3,7 @@ import { ZodError } from 'zod'
 import { DealInputSchema } from '../../../lib/domain/types'
 import { getCreatorIdFromRequest } from '../../../lib/auth/server'
 import { assessOffer } from '../../../lib/ai/offer-agent'
-import { createServerClient } from '../../../lib/supabase/server-client'
+import { createServiceClient } from '../../../lib/supabase/server-client'
 
 // Assess an inbound offer against the creator's rate floor and draft a reply.
 // Floor comes from the request, falling back to the creator's stored rate_floor.
@@ -25,7 +25,7 @@ export async function POST(request: Request): Promise<Response> {
 
     let floor = typeof body.floor === 'number' ? body.floor : null
     let displayName = 'there'
-    const { data } = await createServerClient()
+    const { data } = await createServiceClient()
       .from('creators')
       .select('display_name, rate_floor')
       .eq('id', creatorId)

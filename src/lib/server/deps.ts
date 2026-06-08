@@ -1,4 +1,4 @@
-import { createServerClient } from '../supabase/server-client'
+import { createServiceClient } from '../supabase/server-client'
 import { SupabaseDealRepository } from '../repository/supabase-deal-repository'
 import { SupabaseEventSink } from '../events/supabase-event-sink'
 import { FakePaymentsProvider } from '../payments/fake-payments-provider'
@@ -13,16 +13,23 @@ export interface ServerDeps {
   payments: PaymentsProvider
 }
 
-// Use Cashfree when credentials are present; otherwise the float-free fake (dev/E2E).
+// Use Cashfree when credentials are present. The signature-skipping fake provider
+// is ONLY available behind an explicit PAYMENTS_PROVIDER=fake opt-in (dev/E2E) —
+// never as a silent production fallback, which would let anyone forge a paid webhook.
 export function getPaymentsProvider(): PaymentsProvider {
   if (process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY) {
     return new CashfreePaymentsProvider()
   }
-  return new FakePaymentsProvider()
+  if (process.env.PAYMENTS_PROVIDER === 'fake') {
+    return new FakePaymentsProvider()
+  }
+  throw new Error(
+    'No payments provider configured (set CASHFREE_* keys, or PAYMENTS_PROVIDER=fake for dev)',
+  )
 }
 
 export function getServerDeps(): ServerDeps {
-  const client = createServerClient()
+  const client = createServiceClient()
   return {
     dealRepo: new SupabaseDealRepository(client),
     events: new SupabaseEventSink(client),

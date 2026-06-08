@@ -13,6 +13,10 @@ export async function markDealPaid(dealId: string, deps: MarkPaidDeps): Promise<
   if (!existing) {
     throw new Error(`deal not found: ${dealId}`)
   }
+  // Idempotent: a replayed/redelivered webhook must not re-settle or re-emit.
+  if (existing.status === 'paid') {
+    return existing
+  }
   const now = deps.now ?? (() => new Date().toISOString())
   const paidAt = now()
 

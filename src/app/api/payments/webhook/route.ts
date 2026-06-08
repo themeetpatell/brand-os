@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getPaymentsProvider, getServerDeps } from '../../../../lib/server/deps'
+import { getServerDeps } from '../../../../lib/server/deps'
 import { markDealPaid } from '../../../../lib/services/mark-paid'
 
 // Payment-aggregator webhook: verify signature, then settle the deal. Roster holds
@@ -11,14 +11,22 @@ export async function POST(request: Request): Promise<Response> {
     'x-webhook-timestamp': request.headers.get('x-webhook-timestamp') ?? undefined,
   }
 
-  const event = getPaymentsProvider().verifyWebhook(rawBody, headers)
+  // Build deps once so the same provider verifies the signature and settles the deal.
+  let deps
+  try {
+    deps = getServerDeps()
+  } catch (error) {
+    console.error('webhook deps init failed', error)
+    return NextResponse.json({ error: 'Processing error' }, { status: 500 })
+  }
+
+  const event = deps.payments.verifyWebhook(rawBody, headers)
   if (!event) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
   if (event.status === 'paid') {
     try {
-      const deps = getServerDeps()
       await markDealPaid(event.dealId, { repo: deps.dealRepo, events: deps.events })
     } catch (error) {
       console.error('webhook settle failed', error)
