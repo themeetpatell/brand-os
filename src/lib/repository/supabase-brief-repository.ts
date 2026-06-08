@@ -2,6 +2,9 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Currency, BriefStatus, Niche, Region } from '../domain/types'
 import type { Brief, BriefRepository } from './brief-repository'
 
+// Bound list payloads / cold-start cost until the matched feed gets real pagination.
+const MAX_BRIEFS = 200
+
 interface BriefRow {
   id: string
   brand_id: string
@@ -71,6 +74,7 @@ export class SupabaseBriefRepository implements BriefRepository {
       .select('*')
       .eq('brand_id', brandId)
       .order('created_at', { ascending: false })
+      .limit(MAX_BRIEFS)
       .returns<BriefRow[]>()
     if (error) throw new Error(`listBriefsByBrand failed: ${error.message}`)
     return (data ?? []).map(toBrief)
@@ -82,6 +86,7 @@ export class SupabaseBriefRepository implements BriefRepository {
       .select('*')
       .eq('status', 'open')
       .order('created_at', { ascending: false })
+      .limit(MAX_BRIEFS)
       .returns<BriefRow[]>()
     if (error) throw new Error(`listOpenBriefs failed: ${error.message}`)
     return (data ?? []).map(toBrief)

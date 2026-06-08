@@ -38,9 +38,12 @@ export default function BrandPage() {
       setToken(session.access_token)
       const user = session.user
       const name = (user.email ?? 'brand').split('@')[0]
-      await supabase
+      const { error: profileError } = await supabase
         .from('brands')
         .upsert({ id: user.id, name, email: user.email }, { onConflict: 'id', ignoreDuplicates: true })
+      if (profileError) {
+        setError('Could not set up your brand profile. Refresh and try again.')
+      }
     })
   }, [router])
 
