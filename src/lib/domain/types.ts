@@ -53,3 +53,23 @@ export const DealInputSchema = z.object({
   currency: z.enum(CURRENCIES),
 })
 export type DealInput = z.infer<typeof DealInputSchema>
+
+export const BRIEF_STATUSES = ['open', 'closed', 'filled'] as const
+export type BriefStatus = (typeof BRIEF_STATUSES)[number]
+
+export const BriefInputSchema = z
+  .object({
+    title: z.string().min(1).max(120),
+    goal: z.string().min(1).max(500),
+    budgetMin: z.number().positive(),
+    budgetMax: z.number().positive(),
+    currency: z.enum(CURRENCIES),
+    niche: z.enum(NICHES),
+    region: z.enum(REGIONS),
+    deliverables: z.array(z.string().min(1)).min(1).max(20),
+  })
+  .refine((b) => b.budgetMax >= b.budgetMin, {
+    message: 'budgetMax must be >= budgetMin',
+    path: ['budgetMax'],
+  })
+export type BriefInput = z.infer<typeof BriefInputSchema>
