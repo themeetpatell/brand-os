@@ -88,6 +88,19 @@ export default function DashboardPage() {
     await loadDeals()
   }
 
+  async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    await authFetch('/api/profile', {
+      method: 'POST',
+      body: JSON.stringify({
+        niche: String(form.get('niche')),
+        region: String(form.get('region')),
+        rateFloor: Number(form.get('rateFloor')),
+      }),
+    })
+  }
+
   async function getPaid(dealId: string) {
     const res = await authFetch('/api/payments', { method: 'POST', body: JSON.stringify({ dealId }) })
     if (!res.ok) {
@@ -114,6 +127,21 @@ export default function DashboardPage() {
           <Metric label="Deals logged" value={String(deals.length)} />
           <Metric label="GMV routed" value={gmvRouted.toLocaleString()} accent />
           <Metric label="Paid" value={String(paidCount)} />
+        </section>
+
+        <section className="mt-8 rounded-[var(--radius-xl)] border border-line bg-card p-6 shadow-soft">
+          <h2 className="font-display text-xl font-semibold text-ink">Your profile</h2>
+          <p className="mt-1 text-sm text-ink-soft">Set these so brands can match you with briefs.</p>
+          <form onSubmit={saveProfile} className="mt-4 grid gap-3 sm:grid-cols-3" data-testid="profile-form">
+            <select name="niche" className={inputClass} defaultValue="beauty">
+              {['fashion','beauty','fitness','food','lifestyle','tech'].map((n) => (<option key={n} value={n}>{n[0].toUpperCase()+n.slice(1)}</option>))}
+            </select>
+            <select name="region" className={inputClass} defaultValue="IN">
+              <option value="IN">India</option><option value="AE">UAE</option>
+            </select>
+            <input name="rateFloor" type="number" min={1} required placeholder="Rate floor" className={inputClass} />
+            <button type="submit" className="rounded-full bg-ink px-5 py-2.5 font-medium text-paper sm:col-span-3 sm:w-fit">Save profile</button>
+          </form>
         </section>
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">

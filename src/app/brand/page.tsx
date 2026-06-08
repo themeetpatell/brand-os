@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { getBrowserClient } from '../../lib/supabase/browser-client'
 import { AppHeader } from '../../components/AppHeader'
 
+interface Applicant { id: string; quoteAmount: number; currency: string; message: string; status: string }
+
 interface Brief {
   id: string
   title: string
@@ -22,6 +24,7 @@ export default function BrandPage() {
   const [token, setToken] = useState<string | null>(null)
   const [briefs, setBriefs] = useState<Brief[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [apps, setApps] = useState<Record<string, Applicant[]>>({})
 
   const authFetch = useCallback(
     (path: string, init: RequestInit = {}) =>
@@ -48,6 +51,19 @@ export default function BrandPage() {
       }
     })
   }, [])
+
+  async function loadApplicants(briefId: string) {
+    const res = await authFetch(`/api/briefs/${briefId}/applications`)
+    if (res.ok) {
+      const data = await res.json()
+      setApps((prev) => ({ ...prev, [briefId]: data.applications }))
+    }
+  }
+
+  async function accept(applicationId: string, briefId: string) {
+    const res = await authFetch(`/api/applications/${applicationId}/accept`, { method: 'POST' })
+    if (res.ok) await loadApplicants(briefId)
+  }
 
   async function postBrief(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -160,6 +176,25 @@ export default function BrandPage() {
                 <div className="mt-1 text-xs capitalize text-ink-faint">
                   {b.niche} · {b.region}
                 </div>
+                <button onClick={() => loadApplicants(b.id)} className="mt-3 rounded-full border border-line px-3.5 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:text-ink">
+                  View applicants
+                </button>
+                {apps[b.id] && (
+                  <ul className="mt-3 space-y-2" data-testid="applicants">
+                    {apps[b.id].length === 0 && <li className="text-xs text-ink-faint">No applicants yet.</li>}
+                    {apps[b.id].map((a) => (
+                      <li key={a.id} className="flex items-center justify-between gap-3 rounded-[12px] border border-line/70 bg-paper/60 px-4 py-2.5">
+                        <div>
+                          <div className="tnum text-sm font-medium text-ink">{a.currency} {a.quoteAmount.toLocaleString()}</div>
+                          <div className="text-xs text-ink-soft">{a.message}</div>
+                        </div>
+                        {a.status === 'accepted'
+                          ? <span className="rounded-full border border-positive/30 bg-positive/10 px-2.5 py-0.5 text-xs font-medium text-positive">Accepted</span>
+                          : <button onClick={() => accept(a.id, b.id)} className="shrink-0 rounded-full bg-marigold px-3.5 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-marigold-deep hover:text-paper">Accept</button>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ))}
           </ul>

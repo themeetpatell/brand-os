@@ -20,6 +20,7 @@ export default function BriefsFeedPage() {
   const [briefs, setBriefs] = useState<Brief[]>([])
   const [message, setMessage] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
 
   const load = useCallback(async (token: string) => {
     const res = await fetch('/api/briefs', { headers: { authorization: `Bearer ${token}` } })
@@ -39,9 +40,21 @@ export default function BriefsFeedPage() {
           window.location.href = '/login'
           return
         }
+        setToken(data.session.access_token)
         load(data.session.access_token)
       })
   }, [load])
+
+  async function apply(briefId: string, event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const res = await fetch(`/api/briefs/${briefId}/apply`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ quoteAmount: Number(form.get('quoteAmount')), message: String(form.get('message')) }),
+    })
+    if (res.ok) event.currentTarget.reset()
+  }
 
   return (
     <div className="min-h-full">
@@ -87,6 +100,11 @@ export default function BriefsFeedPage() {
                   {b.niche} · {b.region}
                 </span>
               </div>
+              <form onSubmit={(e) => apply(b.id, e)} className="mt-4 flex flex-wrap items-center gap-2 border-t border-line/60 pt-4" data-testid="apply-form">
+                <input name="quoteAmount" type="number" min={1} required defaultValue={b.budgetMin} className="w-32 rounded-[10px] border border-line bg-paper/60 px-3 py-2 text-sm text-ink" />
+                <input name="message" required placeholder="One line for the brand" className="min-w-0 flex-1 rounded-[10px] border border-line bg-paper/60 px-3 py-2 text-sm text-ink" />
+                <button type="submit" className="rounded-full bg-marigold px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-marigold-deep hover:text-paper">Apply</button>
+              </form>
             </li>
           ))}
         </ul>
