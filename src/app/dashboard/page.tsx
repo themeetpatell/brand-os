@@ -123,10 +123,10 @@ export default function DashboardPage() {
         <table className="mt-3 w-full text-left text-sm" data-testid="deals">
           <tbody>
             {deals.map((deal) => (
-              <tr key={deal.id} className="border-b">
+              <tr key={deal.id} className="border-b" data-deal-id={deal.id}>
                 <td className="py-2 font-medium">{deal.brandName}</td>
                 <td className="py-2">{deal.currency} {deal.amount.toLocaleString()}</td>
-                <td className="py-2 text-gray-500">{deal.status}</td>
+                <td className="py-2 text-gray-500" data-testid="deal-status">{deal.status}</td>
                 <td className="py-2 text-right">
                   {deal.status !== 'paid' && (
                     <button onClick={() => getPaid(deal.id)} className="rounded border px-3 py-1">Get paid</button>

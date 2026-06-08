@@ -38,6 +38,13 @@ describe('InMemoryDealRepository', () => {
     expect(found?.status).toBe('paid')
   })
 
+  it('scopes getDealByIdForCreator to the owner', async () => {
+    const repo = new InMemoryDealRepository()
+    await repo.saveDeal(makeDeal({ id: 'd1', creatorId: 'creator_1' }))
+    expect(await repo.getDealByIdForCreator('d1', 'creator_1')).not.toBeNull()
+    expect(await repo.getDealByIdForCreator('d1', 'creator_2')).toBeNull()
+  })
+
   it('lists only the given creator deals', async () => {
     const repo = new InMemoryDealRepository()
     await repo.saveDeal(makeDeal({ id: 'd1', creatorId: 'creator_1' }))

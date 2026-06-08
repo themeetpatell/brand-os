@@ -23,8 +23,8 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const deps = getServerDeps()
-    const deal = await deps.dealRepo.getDealById(body.dealId)
-    if (!deal || deal.creatorId !== creatorId) {
+    const deal = await deps.dealRepo.getDealByIdForCreator(body.dealId, creatorId)
+    if (!deal) {
       return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
     }
 

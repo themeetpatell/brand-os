@@ -11,6 +11,11 @@ export class InMemoryDealRepository implements DealRepository {
     return this.store.get(id) ?? null
   }
 
+  async getDealByIdForCreator(id: string, creatorId: string): Promise<Deal | null> {
+    const deal = this.store.get(id)
+    return deal && deal.creatorId === creatorId ? deal : null
+  }
+
   async listDealsByCreator(creatorId: string): Promise<Deal[]> {
     return [...this.store.values()].filter((deal) => deal.creatorId === creatorId)
   }

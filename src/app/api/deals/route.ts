@@ -23,7 +23,8 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json(deal, { status: 201 })
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json({ error: 'Invalid input', issues: error.issues }, { status: 400 })
+      const issues = error.issues.map((i) => ({ path: i.path, message: i.message }))
+      return NextResponse.json({ error: 'Invalid input', issues }, { status: 400 })
     }
     console.error('log deal failed', error)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })

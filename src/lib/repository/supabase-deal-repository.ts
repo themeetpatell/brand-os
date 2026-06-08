@@ -56,6 +56,17 @@ export class SupabaseDealRepository implements DealRepository {
     return data ? toDeal(data) : null
   }
 
+  async getDealByIdForCreator(id: string, creatorId: string): Promise<Deal | null> {
+    const { data, error } = await this.client
+      .from('deals')
+      .select('*')
+      .eq('id', id)
+      .eq('creator_id', creatorId)
+      .maybeSingle<DealRow>()
+    if (error) throw new Error(`getDealByIdForCreator failed: ${error.message}`)
+    return data ? toDeal(data) : null
+  }
+
   async listDealsByCreator(creatorId: string): Promise<Deal[]> {
     const { data, error } = await this.client
       .from('deals')
